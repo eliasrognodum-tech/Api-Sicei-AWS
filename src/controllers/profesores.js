@@ -1,59 +1,64 @@
-let profesores = []; 
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../config/aws");
 
-const getProfesores = (req, res) => {
-    res.status(200).json(profesores);
+const Profesor = sequelize.define(
+  "Profesor",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    nombres: DataTypes.STRING,
+    apellidos: DataTypes.STRING,
+    numeroEmpleado: DataTypes.STRING,
+    horasClase: DataTypes.INTEGER,
+  },
+  {
+    timestamps: false,
+  },
+);
+
+const getProfesores = async (req, res) => {
+  const profesores = await Profesor.findAll();
+  res.status(200).json(profesores);
 };
 
-const getProfesorById = (req, res) => {
-    const idBusqueda = parseInt(req.params.id);
-    const profesor = profesores.find(p => p.id === idBusqueda);
-    
-    if (profesor) {
-        res.status(200).json(profesor);
-    } else {
-        res.status(404).json({ error: "Profesor no encontrado" });
-    }
+const getProfesorById = async (req, res) => {
+  const prof = await Profesor.findByPk(req.params.id);
+  if (prof) res.status(200).json(prof);
+  else res.status(404).json({ error: "No encontrado" });
 };
 
-const createProfesor = (req, res) => {
-    profesores.push(req.body);
-    res.status(201).json({ 
-        mensaje: "Profesor creado con éxito", 
-        profesor: req.body 
-    });
+const createProfesor = async (req, res) => {
+  try {
+    const nuevo = await Profesor.create(req.body);
+    res.status(201).json(nuevo);
+  } catch (e) {
+    res.status(400).json({ error: "Error al guardar en base de datos" });
+  }
 };
 
-const updateProfesor = (req, res) => {
-    const idBusqueda = parseInt(req.params.id);
-    const index = profesores.findIndex(p => p.id === idBusqueda);
-    
-    if (index !== -1) {
-        profesores[index] = req.body;
-        res.status(200).json({ 
-            mensaje: "Profesor actualizado", 
-            profesor: req.body 
-        });
-    } else {
-        res.status(404).json({ error: "Profesor no encontrado" });
-    }
+const updateProfesor = async (req, res) => {
+  const prof = await Profesor.findByPk(req.params.id);
+  if (!prof) return res.status(404).json({ error: "No encontrado" });
+
+  await prof.update(req.body);
+  res.status(200).json(prof);
 };
 
-const deleteProfesor = (req, res) => {
-    const idBusqueda = parseInt(req.params.id);
-    const index = profesores.findIndex(p => p.id === idBusqueda);
-    
-    if (index !== -1) {
-        profesores.splice(index, 1);
-        res.status(200).json({ mensaje: "Profesor eliminado exitosamente" });
-    } else {
-        res.status(404).json({ error: "Profesor no encontrado" });
-    }
+const deleteProfesor = async (req, res) => {
+  const eliminados = await Profesor.destroy({ where: { id: req.params.id } });
+  if (eliminados > 0)
+    res.status(200).json({ mensaje: "Eliminado exitosamente" });
+  else res.status(404).json({ error: "No encontrado" });
 };
 
-module.exports = { 
-    getProfesores, 
-    getProfesorById, 
-    createProfesor, 
-    updateProfesor, 
-    deleteProfesor 
+module.exports = {
+  Profesor,
+  getProfesores,
+  getProfesorById,
+  createProfesor,
+  updateProfesor,
+  deleteProfesor,
 };
