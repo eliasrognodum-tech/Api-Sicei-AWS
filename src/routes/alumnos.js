@@ -5,12 +5,8 @@ const multer = require("multer");
 const { validarAlumno } = require("../middlewares/validaciones");
 const alumnosController = require("../controllers/alumnos");
 
-// Configuración de multer: Guardar la imagen en el "buffer" de memoria para enviarla a S3
 const upload = multer({ storage: multer.memoryStorage() });
 
-// ==========================================
-// 1. RUTAS CRUD BÁSICAS (MySQL / RDS)
-// ==========================================
 router.get("/", alumnosController.getAlumnos);
 router.get("/:id", alumnosController.getAlumnoById);
 router.post("/", validarAlumno, alumnosController.createAlumno);
